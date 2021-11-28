@@ -1,0 +1,197 @@
+const width = 600;
+const height = 500;
+var waitRN = true;
+var killed = false;
+var pnts = 0;
+var shit;
+var playShit = true;
+var player = {};
+var topCol, botCol;
+var ball, square, killMsgs, killMsgIndex;
+var gradient, wait, kill, flashlight, battery, points, ethanRandom;
+var killMsg = [];
+const devMsg = "Hello, my name is Ethan and I am the developer of this game as well as the popular Jukin' Johnny. This game is fairly simple. One must hover their mouse over the white dot(ghost) in order to gain points. The second that you let it out of your sight, you die and hear a jumpscare-like noise made by my deaf uncle. I hope you enjoy and get inspired to make and play your own things using JavaScript.";
+
+function preload() {
+	soundFormats('mp3');
+	shit = loadSound('shit');
+}
+
+function setup() {
+    var cnv = createCanvas(width, height);
+    var x = (windowWidth - width) * 0.5;
+    var y = (windowHeight - height) * 0.5;
+    cnv.position(x, y);
+    
+    console.log(devMsg);
+    shit.setVolume(1);
+
+ethanRandom = function(min, max, round) {
+  var dist = max - min;
+  if (round) {
+  return Math.round(dist * Math.random() - Math.abs(min)); 
+  } else {
+      return dist * Math.random() - Math.abs(min);
+  }
+};
+
+    ball = {
+        x: width * 0.5,
+        y: height * 0.5,
+        vx: ethanRandom(-1.5, 1.5),
+        vy: ethanRandom(-1.5, 1.5)
+    };
+
+    var gimmeRandom1 = random(150, 250);
+    var gimmeRandom2 = random(150, 250);
+    square = {
+        w: gimmeRandom1,
+        h: gimmeRandom2,
+        x: (width * 0.5) - (gimmeRandom1 * 0.5),
+        y: (height * 0.5) - (gimmeRandom2 * 0.5)
+    };
+
+    player = {
+        x: width * 0.5,
+        y: height * 0.5,
+        battery: 100
+    };
+
+    topCol = color(135, 37, 135);
+    botCol = color(112, 6, 6);
+
+    killMsgs = [
+	"spooked",
+	"perished",
+	"ded, foo",
+	"un-fleek",
+	"more try",
+	"get good",
+	"get rekt",
+	"loser",
+	"noice..",
+	"nice one, m8"
+    ];	
+    killMsgIndex = Math.floor(Math.random() * killMsgs.length);
+
+    wait = function() {
+        gradient(topCol, botCol, 0, height);
+        flashlight(player.x, player.y, player.battery);
+        var dist = Math.sqrt((mouseX - width * 0.5) * (mouseX - width * 0.5) + (mouseY - height * 0.5) * (mouseY - height * 0.5));
+        fill(255, 255, 0);
+        textAlign(CENTER);
+        fill(0);
+        textSize(width * 0.05);
+        text("click here", width * 0.5, height * 0.52);
+	textSize(width * 0.03); text("to play", width * 0.5, height * 0.56);
+	fill(255); textSize(width * 0.1); text("FLASHLIGHT", width * 0.5, height * 0.25);
+        textSize(width * 0.05);
+	if (mouseIsPressed && dist <= player.battery * 0.5) {
+            waitRN = false;
+        }
+    }
+
+    flashlight = function(x, y, r) {
+        for (var i = r; i > 0; i -= (r * 0.1)) {
+            fill(237, 229, 154, 1 / i * 2500);
+            noStroke();
+            ellipse(x, y, i, i);
+        }
+    }
+
+    battery = function() {
+	if (!killed) {
+        	player.battery -= 0.01;
+	}
+        var percent = Math.floor(player.battery);
+        // white space
+        fill(255);
+        rect(width * 0.5, 0, width * 0.5, height * 0.1);
+        // tank
+        fill(255, 0, 0, 50);
+        rect(width * 0.55, height * 0.02, width * 0.4, height * 0.05);
+        // amt in tank
+        fill(93, 242, 12);
+        rect(width * 0.55, height * 0.02, width * 0.4 * percent * 0.01, height * 0.05);
+    }
+
+    gradient = function(col1, col2, startY, endY) {
+        var interColor = col1;
+        var cOffset = 0;
+        for (var n = startY; n < endY; n++) {
+            cOffset += 1 / (endY - startY);
+            interColor = lerpColor(col1, col2, cOffset);
+            stroke(interColor);
+            line(0, n, width, n);
+        }
+    }
+
+    kill = function() {
+        gradient(topCol, botCol, 0, height);
+	// Kill msg
+        fill(255); rect(width * 0.35, height * 0.10, width * 0.3, height * 0.07);
+        fill(0); text(killMsgs[killMsgIndex], width * 0.5, height * 0.15);
+        rect(square.x, square.y, square.w, square.h);
+        fill(255); rect(0, height * 0.9, width * 0.2, height * 0.1);
+        fill(0); text(pnts, width * 0.09, height * 0.97);
+    }
+
+    points = function() {
+        if (!killed) {
+            pnts += 1;
+        }
+        fill(255);
+        rect(0, height * 0.9, width * 0.2, height * 0.1);
+        fill(0);
+        text(pnts, width * 0.09, height * 0.97);
+    }
+    
+}
+
+function draw() {
+    if (waitRN && !killed) {
+        wait();
+    } else {
+        // update
+        rect(square.x, square.y, square.w, square.h);
+        // hidden rect
+        gradient(topCol, botCol, 0, height);
+        battery();
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+        player.x = mouseX;
+        player.y = mouseY;
+        var dist = Math.sqrt((mouseX - ball.x) * (mouseX - ball.x) + (mouseY - ball.y) * (mouseY - ball.y));
+
+        if (ball.x >= square.x + square.w || ball.x <= square.x) {
+            ball.vx *= -1;
+        }
+        if (ball.y >= square.y + square.h || ball.y <= square.y) {
+            ball.vy *= -1;
+        }
+	// update ball spd
+		var sign;
+		if (ball.vy > 0) {sign = 1;} else {sign = -1;}
+		ball.vy += 0.0005 * sign;
+		if (ball.vx > 0) {sign = 1;} else {sign = -1;}
+		ball.vx += 0.0005 * sign;
+
+        if (dist > player.battery * 0.5) {
+	    if (playShit) {
+            	shit.play();
+		playShit = false;
+            }
+	    killed = true;
+        }
+
+        // display
+        flashlight(player.x, player.y, player.battery);
+        fill(255, 255, 255);
+        ellipse(ball.x, ball.y, 8, 8);
+        points();
+    }
+
+    if (killed) {
+        kill();
+    }
+}
